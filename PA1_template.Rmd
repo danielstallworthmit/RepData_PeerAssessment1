@@ -1,25 +1,121 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Reproducible Research Knitr"
+author: "Daniel Stallworth"
+date: "4/12/2017"
+output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(ggplot2)
+```
 
 ## Loading and preprocessing the data
 
+```{r}
+activitydata <- as.data.table(read.csv("/Users/danielstallworth/Downloads/activity.csv", na.strings = 'NA'))
+head(activitydata)
+```
+
+## What is mean total number of steps taken per day?  
+
+### Steps taken per day histogram
+
+```{r}
+totsteps <- activitydata[,j=list(totalsteps=sum(steps,na.rm = T)),by = date]
+qplot(x=totsteps$totalsteps) + geom_histogram(bins = 30)
+```
+
+### Mean of Steps per day
+
+```{r}
+mean(totsteps$totalsteps,na.rm = T)
+```
 
 
-## What is mean total number of steps taken per day?
+### Median of Steps per day
+
+```{r}
+median(totsteps$totalsteps,na.rm = T)
+```
+
+
+## What is the average daily activity pattern?  
+
+### Average steps per day interval
+
+```{r}
+intervalstepsavg <- activitydata[,j=list(avgintervalsteps=mean(steps,na.rm = T)), by = interval]
+head(intervalstepsavg)
+with(intervalstepsavg, plot(interval, avgintervalsteps,type = "l"))
+```
+
+
+### Max average interval steps
+
+```{r}
+intervalstepsavg[avgintervalsteps == max(avgintervalsteps,na.rm = T)]
+```
+
+## Imputing missing values  
+
+### Count of missing values
+
+```{r}
+sum(is.na(activitydata))
+```
+
+
+### Imputing missing values with the mean of the interval
+
+```{r}
+imputedactivitydata <- activitydata
+# If na, set it to the mean steps for that interval which has already been computed in intervalstepsavg data table, so just look up the average value there and input into the missing value
+imputedactivitydata$steps <- ifelse(is.na(activitydata$steps) == T, intervalstepsavg$avgintervalsteps[activitydata$interval %in% intervalstepsavg$interval], activitydata$steps)
+# If average value is still na set to 0
+imputedactivitydata$steps[is.na(imputedactivitydata$steps)] <- 0
+# Get the total steps per day including imputed values and plot histogram
+imputedtotsteps <- imputedactivitydata[,j=list(totalsteps=sum(steps)),by = date]
+qplot(x=imputedtotsteps$totalsteps) + geom_histogram(bins = 30)
+```
+
+### Mean of Imputed Steps per day
+
+```{r}
+mean(imputedtotsteps$totalsteps)
+```
+
+
+### Median of Imputed Steps per day
+
+```{r}
+median(imputedtotsteps$totalsteps)
+```
+
+Looks like the average total steps per day decreases slightly and the median total steps per day increases slightly.
+
+## Are there differences in activity patterns between weekdays and weekends?  
+
+### Creating Weekday variable and plot of average steps per interval for weekday vs weekend
+
+```{r}
+imputedactivitydata$date <- as.Date(imputedactivitydata$date)
+weekenddays <- c("Saturday","Sunday")
+imputedactivitydata$weekday <- imputedactivitydata[,j=list(weekday=factor((weekdays(date) %in% weekenddays), levels = c(T,F), labels=c('weekend', 'weekday')))]
+head(imputedactivitydata)
+
+# Average steps for interval by weekend vs weekday
+imputedintervalstepsavg <- imputedactivitydata[,j=list(avgintervalsteps=mean(steps)), by = list(weekday,interval)]
+head(imputedintervalstepsavg)
+par(mfrow=c(2,1),mar=c(4,4,2,0))
+with(imputedintervalstepsavg[weekday == "weekday"], plot(interval, avgintervalsteps, main="Weekdays", type = "l", xlab="", ylim = c(0,210)))
+with(imputedintervalstepsavg[weekday == "weekend"], plot(interval, avgintervalsteps, main="Weekends", type = "l", ylim = c(0,210)))
+```
 
 
 
-## What is the average daily activity pattern?
 
 
 
-## Imputing missing values
 
-
-
-## Are there differences in activity patterns between weekdays and weekends?
