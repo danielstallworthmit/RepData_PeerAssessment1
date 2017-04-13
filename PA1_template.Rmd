@@ -5,7 +5,7 @@ date: "4/12/2017"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, fig.path = './figure/'}
 knitr::opts_chunk$set(echo = TRUE)
 library(data.table)
 library(ggplot2)
@@ -22,7 +22,7 @@ head(activitydata)
 
 ### Steps taken per day histogram
 
-```{r}
+```{r, fig.path = './figure/'}
 totsteps <- activitydata[,j=list(totalsteps=sum(steps,na.rm = T)),by = date]
 qplot(x=totsteps$totalsteps) + geom_histogram(bins = 30)
 ```
@@ -45,7 +45,7 @@ median(totsteps$totalsteps,na.rm = T)
 
 ### Average steps per day interval
 
-```{r}
+```{r, fig.path = './figure/'}
 intervalstepsavg <- activitydata[,j=list(avgintervalsteps=mean(steps,na.rm = T)), by = interval]
 head(intervalstepsavg)
 with(intervalstepsavg, plot(interval, avgintervalsteps,type = "l"))
@@ -69,7 +69,7 @@ sum(is.na(activitydata))
 
 ### Imputing missing values with the mean of the interval
 
-```{r}
+```{r, fig.path = './figure/'}
 imputedactivitydata <- activitydata
 # If na, set it to the mean steps for that interval which has already been computed in intervalstepsavg data table, so just look up the average value there and input into the missing value
 imputedactivitydata$steps <- ifelse(is.na(activitydata$steps) == T, intervalstepsavg$avgintervalsteps[activitydata$interval %in% intervalstepsavg$interval], activitydata$steps)
@@ -99,7 +99,7 @@ Looks like the average total steps per day decreases slightly and the median tot
 
 ### Creating Weekday variable and plot of average steps per interval for weekday vs weekend
 
-```{r}
+```{r, fig.path = './figure/'}
 imputedactivitydata$date <- as.Date(imputedactivitydata$date)
 weekenddays <- c("Saturday","Sunday")
 imputedactivitydata$weekday <- imputedactivitydata[,j=list(weekday=factor((weekdays(date) %in% weekenddays), levels = c(T,F), labels=c('weekend', 'weekday')))]
